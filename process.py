@@ -1,4 +1,6 @@
+import os
 import operator as op
+from b_extract_patent import extract
 
 def check_if_personal(inventor_list, company_list):
     companys = set(company_list)
@@ -123,3 +125,12 @@ def try_link(inventor_list, company_list):
                 status = 'Partial'
         # 4. Future, cluster and allocate
     return status, resolved, unresloved            
+
+if __name__ == "__main__":
+    path = './data/EP201901/B1'
+    count = 0
+    for filename in os.listdir(path):
+        patent = extract(os.path.join(path, filename))
+        if patent['lang'] == 'en':
+            count += 1
+    print(count)
