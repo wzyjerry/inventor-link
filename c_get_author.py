@@ -1,3 +1,4 @@
+import time
 import pymongo
 from clients.rest import RESTClient
 
@@ -12,18 +13,6 @@ def fetch_author(db):
 
 def fetch_inventor(db):
     inventor = db['patent_inventor']
-    return inventor
-
-def fetch_inventor(db):
-    inventor = db['patent_inventor']
-    inventor.create_index([
-        ('name', pymongo.ASCENDING),
-        ('addr.str', pymongo.ASCENDING),
-        ('addr.city', pymongo.ASCENDING),
-        ('addr.ctry', pymongo.ASCENDING)
-    ], unique=True)
-    inventor.create_index([('name', pymongo.ASCENDING)])
-    inventor.create_index([('addr.ctry', pymongo.ASCENDING)])
     return inventor
 
 def resolve_name(field_name):
@@ -42,7 +31,12 @@ def get_author(client, inventor):
     name = inventor['name'].split(',')
     name.append(name[0])
     name = ' '.join([x.strip() for x in name[1:]])
-    result = client.search_person_advanced(name=name, size=1)
+    while True:
+        try:
+            result = client.search_person_advanced(name=name, size=1)
+            break
+        except Exception as e:
+            time.sleep(5)
     total = result['total']
     find = False
     total_item = []
@@ -67,7 +61,7 @@ if __name__ == "__main__":
     inventor = fetch_inventor(db)
     author = fetch_author(db)
     count = 0
-    for item in inventor.find():
+    for item in inventor.find(no_cursor_timeout=True):
         count += 1
         if count % 1000 == 0:
             print(count)
